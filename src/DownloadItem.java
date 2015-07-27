@@ -1,6 +1,7 @@
 /**
  * Created by xianyu.hxy on 2015/7/9.
  */
+
 public class DownloadItem {
     public String getDownload_name() {
         return download_name;
