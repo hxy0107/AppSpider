@@ -23,7 +23,7 @@ public class AutoProcess {
 
 
 
-    public static String RequestApp="微信";
+    public static String RequestApp="qq";
     public static String RequestPac="com.jumi";
     public static String choose_url;
     public static String app_verison=null;
@@ -85,6 +85,11 @@ public class AutoProcess {
                         "WHERE pack_only.`package_name`='" +pn+
                         "');";
                 int result1=stmt.executeUpdate(sql1);
+                String sql_3="UPDATE app_info.`pack_only_copy_7.22` \n" +
+                        "SET app_version='"+vc+"'"+
+                        "WHERE package_name='"+pn+"'\n"
+                        ;
+                stmt.executeUpdate(sql_3);
                 File app=new File(FileDirBase+File.separator+ appName+"_"+pn+"_"+vc+".apk");
                 File jarFile=new File(FileDirBase+File.separator+ appName+"_"+pn+"_"+vc+"-enjarify"+".jar");
                 File file=new File(FileDirBase+File.separator+ appName+"_"+pn+"_"+vc+"-enjarify");
@@ -94,7 +99,7 @@ public class AutoProcess {
                 while(app.length()<100){
                     Thread.sleep(10000);
                 }
-                //反编译
+                //锟斤拷锟斤拷锟斤拷
                 if(app.exists()&&app.isFile()&&app.length()>5000){
                     String Path=app.getAbsolutePath();
                     String cmdStr="cmd /c enjarify "+Path;
@@ -110,7 +115,7 @@ public class AutoProcess {
                             ;
                     stmt.executeUpdate(sql4);
                 }else{decode_app="true";};
-                //解压
+                //锟斤拷压
                 if(jarFile.exists()&&jarFile.isFile()&&jarFile.length()>10000){
                     String filePath=jarFile.getAbsolutePath();
                     String folerName=filePath.substring(0, filePath.lastIndexOf("."));
@@ -123,7 +128,7 @@ public class AutoProcess {
 
 
                 if (file.exists() && file.isDirectory()) {
-                    //进入各个app解压文件夹根目
+                    //锟斤拷锟斤拷锟斤拷锟絘pp锟斤拷压锟侥硷拷锟叫革拷目
                     String path = file.getAbsolutePath();
                     pacPath.clear();
                     getFileList(path);
@@ -157,7 +162,7 @@ public class AutoProcess {
 
                             File outFile=new File(out);
 
-                            //读文件
+                            //锟斤拷锟侥硷拷
                             String[] lines = readTXT(out);
                             for (String line : lines) {
                                 System.out.println(line);
@@ -173,6 +178,11 @@ public class AutoProcess {
                                     "WHERE package_name='"+packName+"'\n" +
                                     "AND app_version='"+versionCode+"'";
                             stmt.executeUpdate(sql3);
+
+
+
+
+
                             test.msp_version=null;
                         }
                     }
@@ -232,7 +242,7 @@ public class AutoProcess {
         TagNode[] title=node.getElementsByName("a", true);
         for(TagNode t:title) {
             String s=t.getText().toString();
-            if(s.equals("安装")) {
+            if(s.equals("锟斤拷装")) {
                 String download_name=t.getAttributeByName("download");
                 String download_detail= t.getAttributeByName("href");
                 String download_url=download_detail.replace(";", "&");
@@ -268,9 +278,7 @@ public class AutoProcess {
         File[] files = f.listFiles();
         for (int i = 0; i < files.length; i++) {
             if (files[i].isFile()) {
-                //  System.out.println("文件：" + files[i]);
             } else {
-                //System.out.println("目录：" + files[i].getAbsolutePath());
                 pacPath.add(files[i].getAbsolutePath());
                 getFileList(files[i].getAbsolutePath());
             }
@@ -283,13 +291,10 @@ public class AutoProcess {
         BufferedReader reader = null;
         if (f.exists() && f.isFile()) {
             try {
-                //System.out.println("以行为单位读取文件内容，一次读一整行：");
                 reader = new BufferedReader(new FileReader(f));
                 String tempString = null;
                 int line = 1;
-                // 一次读入一行，直到读入null为文件结束
                 while ((tempString = reader.readLine()) != null) {
-                    // 显示行号
                     //System.out.println("line " + line + ": " + tempString);
                     buffer.append(tempString + "\n");
                     line++;
