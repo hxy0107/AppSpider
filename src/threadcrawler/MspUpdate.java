@@ -27,6 +27,7 @@ public class MspUpdate {
     public static final String BASE_FOLDER = "com" + File.separator + "alipay" + File.separator + "sdk" + File.separator + "cons";
     public final static String FileDirBase="e:"+File.separator+"msp";
     public static  ArrayList<DownloadItem1> itemList;
+    public static Boolean DownloadErr=false;
     public static void main(String[] args){
         HashMap<String,String> map=new HashMap<String, String>();
         itemList=new ArrayList<DownloadItem1>();
@@ -62,49 +63,73 @@ public class MspUpdate {
                     String pn=downloadItems.getPn();
                     String vc=downloadItems.getVc();
                     String icon=downloadItems.getIcon();
-                    if(vc==v){
+                    if(vc.equals(v)){
                         System.out.println(appName+"need not update"+"\n");
                         continue;
                     }else {
                         //download and update msp
-                        System.out.println(appName+" need update"+"\n");
-                        File baseFile=new File(FileDirBase);
-                        if(!baseFile.exists()){
+                        System.out.println(appName + " need update" );
+                        File baseFile = new File(FileDirBase);
+                        if (!baseFile.exists()) {
                             baseFile.mkdir();
                         }
-                        File app=new File(FileDirBase+File.separator+ appName+"_"+pn+"_"+vc+".apk");
-                        File jarFile=new File(FileDirBase+File.separator+ appName+"_"+pn+"_"+vc+"-enjarify"+".jar");
-                        File file=new File(FileDirBase+File.separator+ appName+"_"+pn+"_"+vc+"-enjarify");
-                        DownloadUtils.download(appUrl, appName + "_" + pn + "_" + vc + ".apk", FileDirBase, 1);
-                        Thread.sleep(10000);
-                        while(app.length()<100){
-                            Thread.sleep(10000);
-                        }
-                        //download
-                        if(app.exists()&&app.isFile()&&app.length()>5000){
-                            String Path=app.getAbsolutePath();
-                            String cmdStr="cmd /c enjarify "+Path;
-                            long start=System.currentTimeMillis();
-                            InvokeBat invokeBat=new InvokeBat();
-                            invokeBat.runbat(cmdStr);
-                            long end=System.currentTimeMillis();
-                            System.out.println("finish:"+(end-start)/1000+" s");
-                        }
-                        //unjar
-                        if(jarFile.exists()&&jarFile.isFile()&&jarFile.length()>10000){
-                            String filePath=jarFile.getAbsolutePath();
-                            String folerName=filePath.substring(0, filePath.lastIndexOf("."));
-                            System.out.println("filePath:" + folerName);
-                            long start=System.currentTimeMillis();
-                            ZipUtil.unzip(filePath, folerName);
-                            long end=System.currentTimeMillis();
-                            System.out.println("untar time:"+(end-start)/1000+" s");
+                        File app = new File(FileDirBase + File.separator + appName + "_" + pn + "_" + vc + ".apk");
+                        File jarFile = new File(FileDirBase + File.separator + appName + "_" + pn + "_" + vc + "-enjarify" + ".jar");
+                        File file = new File(FileDirBase + File.separator + appName + "_" + pn + "_" + vc + "-enjarify");
+
+
+                            //download
+                        if(!app.exists()||app.length()==0) {
+                           // System.out.println("appUrl *****:"+appUrl);
+                            DownloadErr=false;
+                            DownloadUtils.download(appUrl, appName + "_" + pn + "_" + vc + ".apk", FileDirBase, 4);
+                            Thread.sleep(20000);
+                            int count=0;
+                            while (app.length() < 1000) {
+                                Thread.sleep(10000);
+                                count++;
+                                if(count>4){
+                                    DownloadErr=true;
+                                    break;
+                                }
+                            }
+                            if(DownloadErr==true)continue;
                         }
 
 
+                        if(jarFile.exists()&&jarFile.length()>500){}
+                        else {
+                            if (app.exists() && app.isFile() && app.length() > 5000) {
+                                String Path = app.getAbsolutePath();
+                                String cmdStr = "cmd /c enjarify " + Path;
+                                long start = System.currentTimeMillis();
+                                InvokeBat invokeBat = new InvokeBat();
+                                invokeBat.runbat(cmdStr);
+                                long end = System.currentTimeMillis();
+                                System.out.println("finish:" + (end - start) / 1000 + " s");
+                            }
+                        }
+                        if(file.exists()&&file.isDirectory()) {}else {
+                            //unjar
+                            if (jarFile.exists() && jarFile.isFile() && jarFile.length() > 10000) {
+                                String filePath = jarFile.getAbsolutePath();
+                                String folerName = filePath.substring(0, filePath.lastIndexOf("."));
+                                System.out.println("filePath:" + folerName);
+                                long start = System.currentTimeMillis();
+                                ZipUtil.unzip(filePath, folerName);
+                                long end = System.currentTimeMillis();
+                                System.out.println("untar time:" + (end - start) / 1000 + " s");
+                            }
+                        }
 
+                        if(!file.exists())continue;
+                        String msp= Msp_Clean.getFile(file.getAbsolutePath());
+                        System.out.println(appName+" msp:"+msp);
 
-
+                        String sql_in="UPDATE app_info.`msp_table_8.12_copy` SET app_versioncode='"+vc+"',msp_version='"+msp+"' WHERE app_name='"+appName+"'";
+                        int res=stmt.executeUpdate(sql_in);
+                        String resu=res==1?"ok":"falure";
+                        System.out.println("Update Database "+resu+"\n\n");
                     }
                 }
             }

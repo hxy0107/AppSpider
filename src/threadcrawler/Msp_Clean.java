@@ -20,6 +20,7 @@ public class Msp_Clean {
     public static final String BASE_FOLDER1 = "com" + File.separator + "alipay" + File.separator + "sdk" + File.separator + "data";
     public static ArrayList<String> pacPath=new ArrayList<String>();
     public static boolean HasMSP=false;
+    public static boolean HasSDK=false;
     public static void main(String[] args){
         String msp= getFile("E:\\msp\\海豹村_com.global.hbc_15-enjarify");
         System.out.println("msp:"+msp);
@@ -27,14 +28,14 @@ public class Msp_Clean {
     public static String getMsp(String path){
         Pattern p = Pattern.compile("[9][//.][0-9][//.][0-9]");
         String txt=null;
-        txt=readTxt(path);
-        Matcher m = p.matcher(txt);
-        String result=null;
-        while(m.find()){
-            result=m.group(0);
-            break;
-           // System.out.println(m.group(0));
-        }
+        String result = null;
+        txt = readTxt(path);
+            Matcher m = p.matcher(txt);
+            if (m.find()) {
+                result = m.group(0);
+
+            }
+
         return result;
     }
     public static String getFile(String path){
@@ -62,16 +63,29 @@ public class Msp_Clean {
                 }
                 File[] listFiles=new File(s).listFiles();
                 for(File f:listFiles) {
-                    javapFile(s,f.getAbsolutePath());
-                    String msp=getMsp(s+File.separator+"msp.txt");
-                    if(msp!=null){
-                        return msp;
+                    if(f.getAbsolutePath().endsWith("class")) {
+                        javapFile(s, f.getAbsolutePath());
+                        String msp = getMsp(s + File.separator + "msp.txt");
+                        if (msp != null) {
+                            return msp;
+                        }
                     }
                 }
 
             }
         }
         return "Not Found";
+    }
+    public static Boolean hasSdk(String path){
+        HasSDK=false;
+        pacPath.clear();
+        getFileList(path);
+        for(String s:pacPath){
+            if(s.contains(BASE_FOLDER)){
+                HasMSP=true;
+            }
+        }
+        return false;
     }
     public static void javapFile(String FoldPath,String FilePath){
         InvokeBat invokeBat=new InvokeBat();
@@ -94,9 +108,10 @@ public class Msp_Clean {
             }
         }
     }
+
     public static String readTxt(String path) {
         File f = new File(path);
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         BufferedReader reader = null;
         if (f.exists() && f.isFile()) {
             try {
@@ -106,10 +121,11 @@ public class Msp_Clean {
                 int line = 1;
                 // 一次读入一行，直到读入null为文件结束
                 while ((tempString = reader.readLine()) != null) {
-                    // 显示行号
-                    //System.out.println("line " + line + ": " + tempString);
+                   // System.out.println("line " + line + ": " + tempString);
                     buffer.append(tempString + "\n");
                     line++;
+                    //为什么会重复读入
+                    if(line>40)break;
                 }
                 reader.close();
             } catch (IOException e) {
