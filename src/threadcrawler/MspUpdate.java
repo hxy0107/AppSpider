@@ -64,7 +64,7 @@ public class MspUpdate {
                     String vc=downloadItems.getVc();
                     String icon=downloadItems.getIcon();
                     if(vc.equals(v)){
-                        System.out.println(appName+"need not update"+"\n");
+                        System.out.println(appName+" need not update"+"\n");
                         continue;
                     }else {
                         //download and update msp
@@ -82,8 +82,8 @@ public class MspUpdate {
                         if(!app.exists()||app.length()==0) {
                            // System.out.println("appUrl *****:"+appUrl);
                             DownloadErr=false;
-                            DownloadUtils.download(appUrl, appName + "_" + pn + "_" + vc + ".apk", FileDirBase, 4);
-                            Thread.sleep(20000);
+                            DownloadUtils.download(appUrl, appName + "_" + pn + "_" + vc + ".apk", FileDirBase, 1);
+                            Thread.sleep(30000);
                             int count=0;
                             while (app.length() < 1000) {
                                 Thread.sleep(10000);
@@ -121,12 +121,21 @@ public class MspUpdate {
                                 System.out.println("untar time:" + (end - start) / 1000 + " s");
                             }
                         }
-
-                        if(!file.exists())continue;
+                        //反编译失败
+                        if(!file.exists()){
+                            String sql_fby="UPDATE app_info.`msp_table_8.12_copy` SET decode_app='false'\n" +
+                                    "WHERE app_name='"+appName+"'";
+                            stmt.executeUpdate(sql_fby);
+                            continue;
+                        }else {
+                            String sql_fby1="UPDATE app_info.`msp_table_8.12_copy` SET decode_app='true'\n" +
+                                    "WHERE app_name='"+appName+"'";
+                            stmt.executeUpdate(sql_fby1);
+                        }
                         String msp= Msp_Clean.getFile(file.getAbsolutePath());
                         System.out.println(appName+" msp:"+msp);
 
-                        String sql_in="UPDATE app_info.`msp_table_8.12_copy` SET app_versioncode='"+vc+"',msp_version='"+msp+"' WHERE app_name='"+appName+"'";
+                        String sql_in="UPDATE app_info.`msp_table_8.12_copy` SET decode_app='true', app_versioncode='"+vc+"',msp_version='"+msp+"' WHERE app_name='"+appName+"'";
                         int res=stmt.executeUpdate(sql_in);
                         String resu=res==1?"ok":"falure";
                         System.out.println("Update Database "+resu+"\n\n");

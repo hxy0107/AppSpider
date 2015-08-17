@@ -28,8 +28,12 @@ public class Msp_Crawler {
     public static Boolean HasMspPro=false;
 
     public static ArrayList<DownloadItem1> itemList;
-    public static void main(String[] args){
 
+    public static int PAGENUM;
+    public static ArrayList<String> array ;
+    public final static String PAGE="&page=";
+    public static void main(String[] args){
+        crawler("支付宝");
     }
     public static void crawler(String RequestApp){
         String RequestApp1= null;
@@ -44,12 +48,41 @@ public class Msp_Crawler {
             Statement stmt=connect.createStatement();
             //**最后再加上 如果统计表中的是最新的话 直接跳过
 
-            //分析网页
             URL url=new URL(requestUrl);
             HtmlCleaner cleaner=new HtmlCleaner();
+            //判断关键词有多少页
             TagNode node=cleaner.clean(url);
+            TagNode[] title=node.getElementsByName("a", true);
             itemList=new ArrayList<DownloadItem1>();
-            spiderUrl(cleaner, itemList, url);
+//查询app页数
+            for(TagNode page:title){
+                String s1=page.getText().toString().trim();
+                if(s1.equals("下一页")){
+                    array=new ArrayList<String>();
+                    TagNode par=page.getParent();
+                    TagNode[] lists= par.getElementsByName("a",true);
+                    for(TagNode x:lists){
+                        String xx= x.getAttributeByName("href");
+                        if(xx!=null&&xx.length()!=0){
+                            array.add(xx);
+                        }
+                    }
+                }
+            }
+            String pageNums=array.get(array.size()-2);
+            String pageNum=pageNums.substring(pageNums.lastIndexOf("=")+1);
+            PAGENUM=Integer.parseInt(pageNum);
+            System.out.println(PAGENUM);
+            //分析网页
+
+                itemList.clear();
+            for(int page=1;page<=PAGENUM;page++){
+                URL newURL=new URL(requestUrl+PAGE+page);
+                System.out.println(requestUrl+PAGE+page);
+                spiderUrl(cleaner,itemList,newURL);
+            }
+
+
             if(itemList.size()<2)return;
             for(DownloadItem1 downloadItems:itemList){
                 String appName=downloadItems.getDownload_name();
@@ -73,13 +106,20 @@ public class Msp_Crawler {
                     v=result.getString(2);
                 }
                 if(n==null){
-                    String sql_1="SELECT app_name, app_version FROM app_info.`pack_only_copy_8.12_copy` WHERE app_name='"+appName+"' ";
-                    ResultSet result_1=stmt.executeQuery(sql_1);
+                    String sql_1="SELECT app_name,app_version FROM app_info.`pack_only_copy_8.12_copy` WHERE app_name='"+appName+"'";
+                    Statement stmt1=connect.createStatement();
+                    ResultSet result_1=stmt1.executeQuery(sql_1);
                     String n_1=null;
                     String v_1=null;
-                    if (result.next()){
+                    if (result_1.next()){
                         n_1=result.getString(1);
                         v_1=result.getString(2);
+                    }
+                   // if(n_1==appName&&v_1==vc){continue;}***更新完表1再打开
+                    if(n_1==appName){
+                        //下载更新
+                    }else{
+                        //下载插入
                     }
                     //继续下载分析
                     //download and update msp
@@ -197,7 +237,7 @@ public class Msp_Crawler {
         for(TagNode t:title) {
             String s=t.getText().toString();
             try {
-                if(s.equals( new String("安装".getBytes("gbk"),"utf-8"))) {
+                if(s.equals( new String("安装".getBytes("gbk"),"gbk"))) {
                     String download_name=t.getAttributeByName("download");
                     String download_detail= t.getAttributeByName("href");
                     String download_url=download_detail.replace(";", "&");
