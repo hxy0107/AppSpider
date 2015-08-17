@@ -115,7 +115,7 @@ public class Msp_Crawler {
                         n_1=result.getString(1);
                         v_1=result.getString(2);
                     }
-                   // if(n_1==appName&&v_1==vc){continue;}***更新完表1再打开
+                    if(n_1==appName&&v_1==vc){continue;}
                     if(n_1==appName){
                         //下载更新
                     }else{

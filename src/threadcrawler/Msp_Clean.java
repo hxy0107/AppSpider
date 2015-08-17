@@ -19,9 +19,11 @@ public class Msp_Clean {
     public static final String BASE_FOLDER = "com" + File.separator + "alipay" + File.separator + "sdk" + File.separator + "cons";
     public static final String BASE_FOLDER1 = "com" + File.separator + "alipay" + File.separator + "sdk" + File.separator + "data";
     public static final String BASE_FOLDER_pd = "com" + File.separator + "alipay" + File.separator + "sdk";
+    public static final String BASE_FOLDERPRO="com"+File.separator+"alipay"+File.separator+File.separator+"android"+File.separator+"app"+File.separator+"pay";
+
     public static ArrayList<String> pacPath=new ArrayList<String>();
     public static boolean HasMSP=false;
-    public static boolean HasSDK=false;
+    public static boolean HasMspPro=false;
     public static void main(String[] args){
         String msp= getFile("E:\\msp\\º£±ª´å_com.global.hbc_15-enjarify");
         System.out.println("msp:"+msp);
@@ -136,12 +138,25 @@ public class Msp_Clean {
         return "Not Found";
     }
     public static Boolean hasSdk(String path){
-        HasSDK=false;
+        HasMSP=false;
         pacPath.clear();
         getFileList(path);
         for(String s:pacPath){
             if(s.contains(BASE_FOLDER)){
                 HasMSP=true;
+                return true;
+            }
+        }
+        return false;
+    }
+    public static Boolean hasMspPro(String path){
+        HasMspPro=false;
+        pacPath.clear();
+        getFileList(path);
+        for(String s:pacPath){
+            if(s.contains(BASE_FOLDERPRO)){
+                HasMspPro=true;
+                return false;
             }
         }
         return false;
