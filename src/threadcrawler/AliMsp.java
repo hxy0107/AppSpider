@@ -62,7 +62,7 @@ public class AliMsp {
                     File jarFile = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify" + ".jar");
                     File file = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify");
 
-                    DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + vc + ".apk", FileDirBase, 1);
+                   DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
                     Thread.sleep(30000);
 
 
@@ -71,6 +71,7 @@ public class AliMsp {
                         if (app.exists() && app.isFile() && app.length() > 5000) {
                             String Path = app.getAbsolutePath();
                             String cmdStr = "cmd /c enjarify " + Path;
+                            System.out.println(cmdStr);
                             long start = System.currentTimeMillis();
                             InvokeBat invokeBat = new InvokeBat();
                             invokeBat.runbat(cmdStr);
