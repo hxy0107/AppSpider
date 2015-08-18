@@ -51,7 +51,8 @@ public class AliMsp {
                 String app_icon = downloadItems.getIcon();
 
                 String vc=MspUtils.QueryVcTable2(stmt,app_name);
-                if(vc==app_versioncode){continue;}
+                System.out.println("应用名:"+app_name+",数据库版本号:"+vc+",最新版本号:"+app_versioncode);
+                if(vc.equals(app_versioncode)){continue;}
                 else{
                     //没有记录 则插入
                     File baseFile = new File(FileDirBase);
@@ -59,16 +60,23 @@ public class AliMsp {
                         baseFile.mkdir();
                     }
                     File app = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + ".apk");
+                    File positionFile=new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + ".apk.position");
                     File jarFile = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify" + ".jar");
                     File file = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify");
-                    if(app.exists()&&app.length()>10000){}else {
+                    if(app.exists()&&app.length()<10000){
+                        if(positionFile.exists()){positionFile.delete();}
+                        app.delete();
+                        if(jarFile.exists()){jarFile.delete();}
+                    }
+                    if (app.exists() && app.length() > 100000) {
+                    } else {
                         DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
-                        Thread.sleep(30000);
+                        Thread.sleep(60000);
                     }
 
-                    if(jarFile.exists()&&jarFile.length()>500){}
+                    if(jarFile.exists()&&jarFile.length()>100000){}
                     else {
-                        if (app.exists() && app.isFile() && app.length() > 5000) {
+                        if (app.exists() && app.isFile() && app.length() > 100000) {
                             String Path = app.getAbsolutePath();
                             String cmdStr = "cmd /c enjarify " + Path;
                             System.out.println(cmdStr);
@@ -79,8 +87,9 @@ public class AliMsp {
                             System.out.println("finish:" + (end - start) / 1000 + " s");
                         }
                     }
+                    /*
                     //如果反编译失败 再次下载编译一次
-                    if(jarFile.exists()&&jarFile.length()<10000||!jarFile.exists()){
+                    if(jarFile.exists()&&jarFile.length()<100000||!jarFile.exists()){
                         if(app.exists())app.delete();
                         if(jarFile.exists())jarFile.delete();
                         DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
@@ -95,11 +104,11 @@ public class AliMsp {
                                 long end = System.currentTimeMillis();
                                 System.out.println("finish:" + (end - start) / 1000 + " s");
                             }
-                    }
+                    }*/
 
                     if(file.exists()&&file.isDirectory()) {}else {
                         //unjar
-                        if (jarFile.exists() && jarFile.isFile() && jarFile.length() > 10000) {
+                        if (jarFile.exists() && jarFile.isFile() && jarFile.length() > 100000) {
                             String filePath = jarFile.getAbsolutePath();
                             String folerName = filePath.substring(0, filePath.lastIndexOf("."));
                             System.out.println("filePath:" + folerName);
@@ -111,8 +120,13 @@ public class AliMsp {
                     }
                     //decode err
                     if(!file.exists()){
-                        MspUtils.InsertTable2(stmt,package_name,app_name,app_versioncode,"false",null,null,null,app_url,app_icon);
-                        continue;
+                        if(vc==null) {
+                            MspUtils.InsertTable2(stmt, package_name, app_name, app_versioncode, "false", null, null, null, app_url, app_icon);
+                            continue;
+                        }else {
+                            MspUtils.UpdateTable2(stmt, package_name, app_name, app_versioncode, "false", null, null, null, app_url, app_icon);
+                            continue;
+                        }
                     }
                     boolean b1=Msp_Clean.hasSdk(file.getAbsolutePath());
                     boolean b2=Msp_Clean.hasMspPro(file.getAbsolutePath());

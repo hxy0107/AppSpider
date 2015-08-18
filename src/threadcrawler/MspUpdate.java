@@ -45,63 +45,61 @@ public class MspUpdate {
                 map.put(n, v);
             }
             for (Map.Entry<String, String> entry : map.entrySet()) {
-                String n=entry.getKey();
-                String v=entry.getValue();
-                System.out.println(n+":"+v);
-                String RequestApp1=URLEncoder.encode(n, "utf-8");
-                String requestUrl="http://apps.wandoujia.com/search?key="+RequestApp1+"&source=search";
+                String n = entry.getKey();
+                String v = entry.getValue();
+                System.out.println(n + ":" + v);
+                String RequestApp1 = URLEncoder.encode(n, "utf-8");
+                String requestUrl = "http://apps.wandoujia.com/search?key=" + RequestApp1 + "&source=search";
 
-                URL url=new URL(requestUrl);
-                HtmlCleaner cleaner=new HtmlCleaner();
-                TagNode node=cleaner.clean(url);
-               itemList.clear();
+                URL url = new URL(requestUrl);
+                HtmlCleaner cleaner = new HtmlCleaner();
+                TagNode node = cleaner.clean(url);
+                itemList.clear();
                 spiderUrl(cleaner, itemList, url);
-                if(itemList.size()>0){
-                    DownloadItem1 downloadItems=itemList.get(0);
-                    String appName=downloadItems.getDownload_name();
-                    String appUrl=downloadItems.getDownload_url();
-                    String pn=downloadItems.getPn();
-                    String vc=downloadItems.getVc();
-                    String icon=downloadItems.getIcon();
-                    if(vc.equals(v)){
-                        System.out.println(appName+" need not update"+"\n");
+                int i=1;
+                if (itemList.size() > 0) {
+                    System.out.println("***********************" + "正在下载更新第" + i + "个应用" + "***********************"+"\n\n");
+                    i++;
+                    DownloadItem1 downloadItems = itemList.get(0);
+                    String package_name = downloadItems.getPn();
+                    String app_name = downloadItems.getDownload_name();
+                    String app_versioncode = downloadItems.getVc();
+                    String app_url = downloadItems.getDownload_url();
+                    String app_icon = downloadItems.getIcon();
+
+                    String vc = MspUtils.QueryVcTable2(stmt, app_name);
+                  //  System.out.println("应用名:" + app_name + ",数据库版本号:" + vc + ",最新版本号:" + app_versioncode);
+                    if (vc!=null&&vc.equals(app_versioncode)) {
                         continue;
-                    }else {
-                        //download and update msp
-                        System.out.println(appName + " need update" );
+                    } else {
+                        //没有记录 则插入
                         File baseFile = new File(FileDirBase);
                         if (!baseFile.exists()) {
                             baseFile.mkdir();
                         }
-                        File app = new File(FileDirBase + File.separator + appName + "_" + pn + "_" + vc + ".apk");
-                        File jarFile = new File(FileDirBase + File.separator + appName + "_" + pn + "_" + vc + "-enjarify" + ".jar");
-                        File file = new File(FileDirBase + File.separator + appName + "_" + pn + "_" + vc + "-enjarify");
+                        File app = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + ".apk");
+                        File positionFile=new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + ".apk.position");
+                        File jarFile = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify" + ".jar");
+                        File file = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify");
 
-
-                            //download
-                        if(!app.exists()||app.length()==0) {
-                           // System.out.println("appUrl *****:"+appUrl);
-                            DownloadErr=false;
-                            DownloadUtils.download(appUrl, appName + "_" + pn + "_" + vc + ".apk", FileDirBase, 1);
-                            Thread.sleep(30000);
-                            int count=0;
-                            while (app.length() < 1000) {
-                                Thread.sleep(10000);
-                                count++;
-                                if(count>4){
-                                    DownloadErr=true;
-                                    break;
-                                }
-                            }
-                            if(DownloadErr==true)continue;
+                        if(app.exists()&&app.length()<100000){
+                            if(positionFile.exists()){positionFile.delete();}
+                            app.delete();
+                            if(jarFile.exists()){jarFile.delete();}
+                        }
+                        if (app.exists() && app.length() > 100000) {
+                        } else {
+                            DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
+                            Thread.sleep(60000);
                         }
 
 
-                        if(jarFile.exists()&&jarFile.length()>500){}
-                        else {
-                            if (app.exists() && app.isFile() && app.length() > 5000) {
+                        if (jarFile.exists() && jarFile.length() > 100000) {
+                        } else {
+                            if (app.exists() && app.isFile() && app.length() > 100000) {
                                 String Path = app.getAbsolutePath();
                                 String cmdStr = "cmd /c enjarify " + Path;
+                                System.out.println(cmdStr);
                                 long start = System.currentTimeMillis();
                                 InvokeBat invokeBat = new InvokeBat();
                                 invokeBat.runbat(cmdStr);
@@ -109,9 +107,29 @@ public class MspUpdate {
                                 System.out.println("finish:" + (end - start) / 1000 + " s");
                             }
                         }
-                        if(file.exists()&&file.isDirectory()) {}else {
+                    /*
+                    //如果反编译失败 再次下载编译一次
+                    if(jarFile.exists()&&jarFile.length()<100000||!jarFile.exists()){
+                        if(app.exists())app.delete();
+                        if(jarFile.exists())jarFile.delete();
+                        DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
+                        Thread.sleep(80000);
+                            if (app.exists() && app.isFile() && app.length() > 5000) {
+                                String Path = app.getAbsolutePath();
+                                String cmdStr = "cmd /c enjarify " + Path;
+                                System.out.println(cmdStr);
+                                long start = System.currentTimeMillis();
+                                InvokeBat invokeBat = new InvokeBat();
+                                invokeBat.runbat(cmdStr);
+                                long end = System.currentTimeMillis();
+                                System.out.println("finish:" + (end - start) / 1000 + " s");
+                            }
+                    }*/
+
+                        if (file.exists() && file.isDirectory()) {
+                        } else {
                             //unjar
-                            if (jarFile.exists() && jarFile.isFile() && jarFile.length() > 10000) {
+                            if (jarFile.exists() && jarFile.isFile() && jarFile.length() > 100000) {
                                 String filePath = jarFile.getAbsolutePath();
                                 String folerName = filePath.substring(0, filePath.lastIndexOf("."));
                                 System.out.println("filePath:" + folerName);
@@ -121,24 +139,58 @@ public class MspUpdate {
                                 System.out.println("untar time:" + (end - start) / 1000 + " s");
                             }
                         }
-                        //反编译失败
-                        if(!file.exists()){
-                            String sql_fby="UPDATE app_info.`msp_table_8.12_copy` SET decode_app='false'\n" +
-                                    "WHERE app_name='"+appName+"'";
-                            stmt.executeUpdate(sql_fby);
-                            continue;
-                        }else {
-                            String sql_fby1="UPDATE app_info.`msp_table_8.12_copy` SET decode_app='true'\n" +
-                                    "WHERE app_name='"+appName+"'";
-                            stmt.executeUpdate(sql_fby1);
+                        //decode err
+                        if (!file.exists()) {
+                            if (vc == null) {
+                                MspUtils.InsertTable2(stmt, package_name, app_name, app_versioncode, "false", null, null, null, app_url, app_icon);
+                                continue;
+                            } else {
+                                if(app_name.equals(n)) {
+                                    MspUtils.UpdateTable2(stmt, package_name, app_name, app_versioncode, "false", null, null, null, app_url, app_icon);
+                                    continue;
+                                }else {
+                                    MspUtils.InsertTable2(stmt, package_name, app_name, app_versioncode, "false", null, null, null, app_url, app_icon);
+                                    continue;
+                                }
+                            }
                         }
-                        String msp= Msp_Clean.getFile(file.getAbsolutePath());
-                        System.out.println(appName+" msp:"+msp);
+                        boolean b1 = Msp_Clean.hasSdk(file.getAbsolutePath());
+                        boolean b2 = Msp_Clean.hasMspPro(file.getAbsolutePath());
+                        String hasSdk = b1 ? "true" : "false";
+                        String hasMspPro = b2 ? "true" : "false";
+                        //没有记录则插入，有记录则更新
+                        if (vc == null) {
+                            if (!b1 && !b2) {
+                                MspUtils.InsertTable2(stmt, package_name, app_name, app_versioncode, "true", "false", null, null, app_url, app_icon);
+                                continue;
+                            }
+                            if (b1) {
+                                String msp = Msp_Clean.getFile(file.getAbsolutePath());
+                                System.out.println(app_name + " msp:" + msp);
+                                MspUtils.InsertTable2(stmt, package_name, app_name, app_versioncode, "true", "true", msp, null, app_url, app_icon);
+                                continue;
+                            }
+                            if (b2) {
+                                MspUtils.InsertTable2(stmt, package_name, app_name, app_versioncode, "true", "true", null, "true", app_url, app_icon);
+                                continue;
+                            }
+                        } else {
+                            if (!b1 && !b2) {
+                                MspUtils.UpdateTable2(stmt, package_name, app_name, app_versioncode, "true", "false", null, null, app_url, app_icon);
+                                continue;
+                            }
+                            if (b1) {
+                                String msp = Msp_Clean.getFile(file.getAbsolutePath());
+                                System.out.println(app_name + " msp:" + msp);
+                                MspUtils.UpdateTable2(stmt, package_name, app_name, app_versioncode, "true", "true", msp, null, app_url, app_icon);
+                                continue;
+                            }
+                            if (b2) {
+                                MspUtils.UpdateTable2(stmt, package_name, app_name, app_versioncode, "true", "true", null, "true", app_url, app_icon);
+                                continue;
+                            }
+                        }
 
-                        String sql_in="UPDATE app_info.`msp_table_8.12_copy` SET decode_app='true', app_versioncode='"+vc+"',msp_version='"+msp+"' WHERE app_name='"+appName+"'";
-                        int res=stmt.executeUpdate(sql_in);
-                        String resu=res==1?"ok":"falure";
-                        System.out.println("Update Database "+resu+"\n\n");
                     }
                 }
             }
@@ -157,6 +209,7 @@ public class MspUpdate {
         }
 
     }
+
 
     public static void spiderUrl(HtmlCleaner cleaner,ArrayList<DownloadItem1> itemList,URL url){
         TagNode node= null;

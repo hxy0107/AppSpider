@@ -64,7 +64,7 @@ public class MspUtils {
         String v=null;
         try {
             result = stmt.executeQuery(sql_1);
-            if (result.next()){
+            while (result.next()){
                 v=result.getString(1);
             }
             if(v!=null)return v;
@@ -81,9 +81,9 @@ public class MspUtils {
             System.out.println("Success connect Mysql server!");
             Statement stmt=connect.createStatement();
 
-
-            boolean b=Msp_Clean.hasMspPro("E:\\msp\\支付宝_com.eg.android.AlipayGphone_78-enjarify");
-            System.out.println(b);
+            String b=QueryVcTable2(stmt,"工行手机银行");
+          //  boolean b=Msp_Clean.hasMspPro("E:\\msp\\支付宝_com.eg.android.AlipayGphone_78-enjarify");
+           System.out.println(b);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
