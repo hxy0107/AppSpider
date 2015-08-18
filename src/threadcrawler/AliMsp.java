@@ -61,10 +61,10 @@ public class AliMsp {
                     File app = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + ".apk");
                     File jarFile = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify" + ".jar");
                     File file = new File(FileDirBase + File.separator + app_name + "_" + package_name + "_" + app_versioncode + "-enjarify");
-
-                   DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
-                    Thread.sleep(30000);
-
+                    if(app.exists()&&app.length()>10000){}else {
+                        DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
+                        Thread.sleep(30000);
+                    }
 
                     if(jarFile.exists()&&jarFile.length()>500){}
                     else {
@@ -79,6 +79,24 @@ public class AliMsp {
                             System.out.println("finish:" + (end - start) / 1000 + " s");
                         }
                     }
+                    //如果反编译失败 再次下载编译一次
+                    if(jarFile.exists()&&jarFile.length()<10000||!jarFile.exists()){
+                        if(app.exists())app.delete();
+                        if(jarFile.exists())jarFile.delete();
+                        DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
+                        Thread.sleep(80000);
+                            if (app.exists() && app.isFile() && app.length() > 5000) {
+                                String Path = app.getAbsolutePath();
+                                String cmdStr = "cmd /c enjarify " + Path;
+                                System.out.println(cmdStr);
+                                long start = System.currentTimeMillis();
+                                InvokeBat invokeBat = new InvokeBat();
+                                invokeBat.runbat(cmdStr);
+                                long end = System.currentTimeMillis();
+                                System.out.println("finish:" + (end - start) / 1000 + " s");
+                            }
+                    }
+
                     if(file.exists()&&file.isDirectory()) {}else {
                         //unjar
                         if (jarFile.exists() && jarFile.isFile() && jarFile.length() > 10000) {
@@ -183,7 +201,7 @@ public class AliMsp {
             for(int page=1;page<=PAGENUM;page++){
                 URL newURL=new URL(requestUrl+PAGE+page);
                 System.out.println(requestUrl+PAGE+page);
-                spiderUrl(cleaner,itemList,newURL);
+                spiderUrl_1(cleaner,itemList,newURL);
             }
             return itemList;
         } catch (UnsupportedEncodingException e) {
@@ -229,6 +247,52 @@ public class AliMsp {
                     String id=mesg[4].substring(mesg[4].indexOf("=") + 1, mesg[4].indexOf("&"));
                     String size=mesg[6].substring(mesg[6].indexOf("=") + 1, mesg[6].indexOf("&"));
                     String icon=mesg[8].substring(mesg[8].indexOf("=") + 1, mesg[8].indexOf("&"));
+                    downloadItem.setApkid(id);
+                    downloadItem.setSize(size);
+                    downloadItem.setIcon(icon);
+                    itemList.add(downloadItem);
+
+                    System.out.println(download_name + "," + download_detail + "    \n" + download_url + "\n");
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    public static void spiderUrl_1(HtmlCleaner cleaner,ArrayList<DownloadItem1> itemList,URL url){
+        TagNode node= null;
+        try {
+            node = cleaner.clean(url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        TagNode[] title=node.getElementsByName("a", true);
+        for(TagNode t:title) {
+            String s=t.getText().toString();
+            try {
+                if(s.equals( new String("安装".getBytes("gbk"),"gbk"))) {
+                    String download_name=t.getAttributeByName("download");
+                    String download_detail= t.getAttributeByName("href");
+                    String download_url=download_detail.replace(";", "&");
+                    String download_url1=download_url.replace("&amp","&");
+
+                    DownloadItem1 downloadItem=new DownloadItem1();
+                    downloadItem.setDownload_detail(download_detail);
+                    downloadItem.setDownload_name(download_name);
+                    downloadItem.setDownload_url(download_url1);
+                    String[] mesg=download_detail.split(";");
+                    String md5=mesg[3].substring(mesg[3].indexOf("=") + 1, mesg[3].indexOf("&"));
+                    String pn=mesg[2].substring(mesg[2].indexOf("=") + 1, mesg[2].indexOf("&"));
+                    String vc=mesg[5].substring(mesg[5].indexOf("=")+1,mesg[5].indexOf("&"));
+                    String folderName= String.valueOf(pn.charAt(pn.lastIndexOf(".")+1)).toLowerCase();
+                    downloadItem.setMd5(md5);
+                    downloadItem.setPn(pn);
+                    downloadItem.setVc(vc);
+                    downloadItem.setFolderName(folderName);
+                    //add
+                    String id=mesg[4].substring(mesg[4].indexOf("=") + 1, mesg[4].indexOf("&"));
+                    String size=mesg[6].substring(mesg[6].indexOf("=") + 1, mesg[6].indexOf("&"));
+                    String icon=mesg[7].substring(mesg[7].indexOf("=") + 1, mesg[7].indexOf("&"));
                     downloadItem.setApkid(id);
                     downloadItem.setSize(size);
                     downloadItem.setIcon(icon);

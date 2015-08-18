@@ -191,7 +191,7 @@ public class MspUpdate {
                     //add
                     String id=mesg[4].substring(mesg[4].indexOf("=") + 1, mesg[4].indexOf("&"));
                     String size=mesg[6].substring(mesg[6].indexOf("=") + 1, mesg[6].indexOf("&"));
-                    String icon=mesg[8].substring(mesg[8].indexOf("=") + 1, mesg[8].indexOf("&"));
+                    String icon=mesg[7].substring(mesg[7].indexOf("=") + 1, mesg[7].indexOf("&"));
                     downloadItem.setApkid(id);
                     downloadItem.setSize(size);
                     downloadItem.setIcon(icon);
