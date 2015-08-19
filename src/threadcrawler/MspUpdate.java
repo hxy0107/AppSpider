@@ -92,7 +92,7 @@ public class MspUpdate {
                             DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
                             Thread.sleep(60000);
                         }
-
+                        if(app.exists()&&app.length()<100000){continue;}
 
                         if (jarFile.exists() && jarFile.length() > 100000) {
                         } else {

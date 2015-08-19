@@ -34,6 +34,12 @@ public class AliMsp {
         crawler(itemList);
 
     }
+    public static void update(String appName){
+        getCrawlerItem(appName);
+        System.out.println(itemList.size());
+        crawler(itemList);
+    }
+
     public static void crawler(ArrayList<DownloadItem1> itemList){
         if(itemList.size()<2)return;
         try {
@@ -42,17 +48,20 @@ public class AliMsp {
             Connection connect= DriverManager.getConnection("jdbc:mysql://localhost:3306", "root", "1");
             System.out.println("Success connect Mysql server!");
             Statement stmt=connect.createStatement();
-
+            int i=1;
             for(DownloadItem1 downloadItems:itemList) {
+                System.out.println("***********************" + "正在下载更新第" + i + "个应用" + "***********************"+"\n\n");
+                i++;
                 String package_name = downloadItems.getPn();
                 String app_name = downloadItems.getDownload_name();
                 String app_versioncode = downloadItems.getVc();
                 String app_url = downloadItems.getDownload_url();
                 String app_icon = downloadItems.getIcon();
 
+
                 String vc=MspUtils.QueryVcTable2(stmt,app_name);
                 System.out.println("应用名:"+app_name+",数据库版本号:"+vc+",最新版本号:"+app_versioncode);
-                if(vc.equals(app_versioncode)){continue;}
+                if(vc!=null&&vc.equals(app_versioncode)){continue;}
                 else{
                     //没有记录 则插入
                     File baseFile = new File(FileDirBase);
@@ -73,6 +82,7 @@ public class AliMsp {
                         DownloadUtils.download(app_url, app_name + "_" + package_name + "_" + app_versioncode + ".apk", FileDirBase, 1);
                         Thread.sleep(60000);
                     }
+                    if(app.exists()&&app.length()<100000){continue;}
 
                     if(jarFile.exists()&&jarFile.length()>100000){}
                     else {
