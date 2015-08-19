@@ -28,6 +28,7 @@ public class MspUpdate {
     public final static String FileDirBase="e:"+File.separator+"msp";
     public static  ArrayList<DownloadItem1> itemList;
     public static Boolean DownloadErr=false;
+
     public static void main(String[] args){
         HashMap<String,String> map=new HashMap<String, String>();
         itemList=new ArrayList<DownloadItem1>();
@@ -44,6 +45,7 @@ public class MspUpdate {
                 String v=result.getString(2);
                 map.put(n, v);
             }
+            int i=1;
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 String n = entry.getKey();
                 String v = entry.getValue();
@@ -56,9 +58,9 @@ public class MspUpdate {
                 TagNode node = cleaner.clean(url);
                 itemList.clear();
                 spiderUrl(cleaner, itemList, url);
-                int i=1;
+
                 if (itemList.size() > 0) {
-                    System.out.println("***********************" + "正在下载更新第" + i + "个应用" + "***********************"+"\n\n");
+                    System.out.println("***********************" + i  + "***********************"+"\n\n");
                     i++;
                     DownloadItem1 downloadItems = itemList.get(0);
                     String package_name = downloadItems.getPn();
